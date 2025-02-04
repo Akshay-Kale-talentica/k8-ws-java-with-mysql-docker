@@ -1,3 +1,8 @@
+1. Need Apache Webserver to host the index.html
+2. There are new Functionnalities in the Code - To Place Order, To see history of Orders Placed, To see existing Ingredients, To Replenish Ingredients, MySQL DB 
+3. Need a Mysql DB connection for this - its entries to be made in application.yaml
+
+
 **K8 Coffee Shop** :
 
 ---
