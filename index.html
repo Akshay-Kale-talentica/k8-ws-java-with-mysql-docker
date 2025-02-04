@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coffee Shop</title>
+    <style>
+        #tabs { display: flex; }
+        #tabs button { padding: 10px; margin: 5px; cursor: pointer; }
+        #orders, #inventory { padding: 20px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div id="tabs">
+    <button onclick="showTab('orders')">Orders</button>
+    <button onclick="showTab('inventory')">Inventory</button>
+</div>
+
+<div id="orders" style="display: block;">
+    <h2>Place Order</h2>
+    <select id="coffeeType">
+        <option value="cappuccino">Cappuccino</option>
+        <option value="americano">Americano</option>
+        </select>
+    <input type="number" id="quantity" placeholder="Quantity" value="1">
+    <button onclick="placeOrder()">Place Order</button>
+
+    <h2>Order History</h2>
+    <table id="orderHistoryTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Coffee Type</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Order Date</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div id="inventory" style="display: none;">
+    <h2>Inventory</h2>
+    <table id="ingredientTable">
+        <thead>
+        <tr>
+            <th>Ingredient</th>
+            <th>Quantity</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Replenish</h2>
+    <select id="ingredientName">
+        </select>
+    <input type="number" id="replenishQuantity" placeholder="Quantity">
+    <button onclick="replenishIngredient()">Replenish</button>
+</div>
+
+<script>
+    const inventoryUrl = "http://localhost:8082/inventory";
+    const orderUrl = "http://localhost:8080/order";
+
+    function showTab(tabId) {
+        document.getElementById('orders').style.display = (tabId === 'orders')? 'block': 'none';
+        document.getElementById('inventory').style.display = (tabId === 'inventory')? 'block': 'none';
+    }
+
+    function placeOrder() {
+        const coffeeType = document.getElementById('coffeeType').value;
+        const quantity = document.getElementById('quantity').value;
+
+        fetch(`${orderUrl}/place?coffeeType=${coffeeType}&quantity=${quantity}`)
+          .then(response => response.json())
+          .then(order => {
+                getOrderHistory(); // Refresh order history
+                alert("Order placed: " + order.status);
+            });
+    }
+
+    function replenishIngredient() {
+        const ingredientName = document.getElementById('ingredientName').value;
+        const replenishQuantity = document.getElementById('replenishQuantity').value;
+
+        fetch(`${inventoryUrl}/replenish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: ingredientName, quantity: replenishQuantity })
+        })
+          .then(response => {
+                if (response.ok) {
+                    getInventory(); // Refresh inventory display
+                    alert("Ingredient replenished!");
+                } else {
+                    alert("Error replenishing ingredient.");
+                }
+            });
+    }
+
+    function getInventory() {
+        fetch(`${inventoryUrl}/stock`)
+          .then(response => response.json())
+          .then(inventory => {
+                const ingredientSelect = document.getElementById('ingredientName');
+                ingredientSelect.innerHTML = ''; // Clear options
+
+                const tableBody = document.getElementById('ingredientTable').querySelector('tbody');
+                tableBody.innerHTML = '';
+
+                for (const ingredient in inventory) {
+                    const option = document.createElement('option');
+                    option.value = ingredient;
+                    option.text = inventory[ingredient].name;
+                    ingredientSelect.appendChild(option);
+
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = inventory[ingredient].name;
+                    row.insertCell().textContent = inventory[ingredient].quantity;
+                }
+            });
+    }
+
+    function getOrderHistory() {
+        fetch(`${orderUrl}/history`)
+          .then(response => response.json())
+          .then(orders => {
+                const tableBody = document.getElementById('orderHistoryTable').querySelector('tbody');
+                tableBody.innerHTML = '';
+
+                orders.forEach(order => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = order.id;
+                    row.insertCell().textContent = order.coffeeType;
+                    row.insertCell().textContent = order.quantity;
+                    row.insertCell().textContent = order.status;
+                    row.insertCell().textContent = order.orderDate;
+                });
+            });
+    }
+
+    // Initial data loading
+    getInventory();
+    getOrderHistory();
+
+</script>
+
+</body>
+</html>
