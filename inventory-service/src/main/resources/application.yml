@@ -1,8 +1,22 @@
 server:
   port: 8082
 
-inventory:
-  espresso-shot: 10
-  milk: 1000
-  milk-foam: 500
-  hot-water: 99999999 # Use a large value to indicate "unlimited"
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/coffee_shop?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC # Replace <your_database_name>
+    username: coffee_shop_user  # Replace
+    password: password  # Replace
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Or none for production
+    show-sql: true # Optional
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+#inventory:
+#  espresso-shot: 100
+#  milk: 10000
+#  milk-foam: 5000
+#  hot-water: 99999999

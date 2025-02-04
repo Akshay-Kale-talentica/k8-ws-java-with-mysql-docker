@@ -1,13 +1,17 @@
 package com.talentica.workshop.order.service;
 
 import com.talentica.workshop.order.model.Order;
+import com.talentica.workshop.order.repository.OrderRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Import for @Transactional
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -17,6 +21,9 @@ public class OrderService {
 
     @Value("${inventory.url}")
     String inventoryUrl;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @PostConstruct
     private void initializeCoffee() {
@@ -31,6 +38,7 @@ public class OrderService {
         );
     }
 
+    @Transactional // Add this annotation
     public Order placeOrder(String coffeeType, int quantity) {
         if (ObjectUtils.isEmpty(coffeeType)) {
             coffeeType = "cappuccino";
@@ -41,7 +49,9 @@ public class OrderService {
                 ingredients, boolean.class);
 
         if (available) {
-            return new Order(coffeeType, quantity, "Confirmed");
+            Order order = new Order(coffeeType, quantity, "Confirmed");
+            orderRepository.save(order);
+            return order;
         } else {
             return new Order(coffeeType, quantity, "Out of Stock");
         }
@@ -50,9 +60,13 @@ public class OrderService {
     private Map<String, Integer> getIngredient(String coffeeType, int quantity) {
         Map<String, Integer> ingredientsOrg = coffees.get(coffeeType);
         Map<String, Integer> ingredients = new HashMap<>(ingredientsOrg);
-        for (String key : ingredients.keySet()) {
+        for (String key: ingredients.keySet()) {
             ingredients.put(key, ingredients.get(key) * quantity);
         }
         return ingredients;
+    }
+
+    public List<Order> getOrderHistory() {
+        return orderRepository.findAll();
     }
 }
