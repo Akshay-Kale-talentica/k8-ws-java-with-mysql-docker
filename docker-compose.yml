@@ -5,6 +5,10 @@ services:
     build: ./httpd
     ports:
       - "80:80"
+    volumes:
+      - /etc/resolv.conf:/etc/resolv.conf
+    networks:
+      - coffee-network
 
   inventory-service:
     build: ./inventory-service
@@ -15,8 +19,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=coffee_shop_user
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
     depends_on:
       - mysql
+    networks:
+      - coffee-network
+    command: ["sh", "-c", "sleep 50 && java -jar inventory-service.jar"]
 
   order-service:
     build: ./order-service
@@ -28,9 +36,13 @@ services:
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - INVENTORY_URL=http://inventory-service:8082
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
     depends_on:
       - mysql
       - inventory-service
+    networks:
+      - coffee-network
+    command: ["sh", "-c", "sleep 50 && java -jar order-service.jar"]
 
   mysql:  
     image: mysql:latest
@@ -43,3 +55,8 @@ services:
       - "3306:3306"
     volumes: 
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - coffee-network
+networks:
+  coffee-network:
+    driver: bridge

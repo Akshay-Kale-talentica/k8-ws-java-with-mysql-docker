@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/coffee_shop?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC # Replace <your_database_name>
+    url: jdbc:mysql://mysql:3306/coffee_shop?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC # Replace <your_database_name>
     username: coffee_shop_user  # Replace
     password: password  # Replace
     driver-class-name: com.mysql.cj.jdbc.Driver
